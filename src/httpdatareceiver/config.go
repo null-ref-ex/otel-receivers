@@ -1,4 +1,4 @@
-package shellreceiver
+package httpdatareceiver
 
 import (
 	"fmt"

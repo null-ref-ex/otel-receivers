@@ -1,4 +1,4 @@
-package shellreceiver
+package httpdatareceiver
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	typeStr         = "shellreceiver"
+	typeStr         = "httpdatareceiver"
 	defaultInterval = 1 * time.Minute
 )
 
