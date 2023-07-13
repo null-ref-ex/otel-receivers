@@ -1,0 +1,12 @@
+dist:
+  name: otelcol-dev
+  description: Basic OTel Collector distribution for Developers
+  output_path: ./otelcol-dev
+
+exporters:
+  - gomod:
+      go.opentelemetry.io/collector/exporter/loggingexporter v0.81.0
+
+receivers:
+  - gomod:
+      github.com/null-ref-ex/otel/collector/receivers/shellreceiver v0.0.0
