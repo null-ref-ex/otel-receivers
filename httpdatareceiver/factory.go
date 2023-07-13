@@ -1,7 +1,7 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
 
-package httpdatareceiver // import "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/httpcheckreceiver"
+package httpdatareceiver // import "github.com/null-ref-ex/otel-receivers/httpdatareceiver"
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/collector/receiver"
 	"go.opentelemetry.io/collector/receiver/scraperhelper"
 
-	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/httpcheckreceiver/internal/metadata"
+	"github.com/null-ref-ex/otel-receivers/httpdatareceiver/internal/metadata"
 )
 
 var errConfigNotHTTPCheck = errors.New("config was not a HTTP check receiver config")

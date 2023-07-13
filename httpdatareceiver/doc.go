@@ -3,4 +3,4 @@
 
 //go:generate mdatagen metadata.yaml
 
-package httpdatareceiver // import "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/httpcheckreceiver"
+package httpdatareceiver // import "github.com/null-ref-ex/otel-receivers/httpdatareceiver"
