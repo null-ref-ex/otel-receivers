@@ -1,26 +1,65 @@
-package httpdatareceiver
+// Copyright The OpenTelemetry Authors
+// SPDX-License-Identifier: Apache-2.0
+
+package httpdatareceiver // import "github.com/open-telemetry/opentelemetry-collector-contrib/receiver/httpcheckreceiver"
 
 import (
+	"errors"
 	"fmt"
-	"os"
-	"time"
+	"net/url"
+
+	"go.opentelemetry.io/collector/config/confighttp"
+	"go.opentelemetry.io/collector/receiver/scraperhelper"
+	"go.uber.org/multierr"
+
+	"github.com/open-telemetry/opentelemetry-collector-contrib/receiver/httpcheckreceiver/internal/metadata"
 )
 
-// Config represents the receiver config settings within the collector's config.yaml
+// Predefined error responses for configuration validation failures
+var (
+	errMissingEndpoint = errors.New(`"endpoint" must be specified`)
+	errInvalidEndpoint = errors.New(`"endpoint" must be in the form of <scheme>://<hostname>[:<port>]`)
+)
+
+// Config defines the configuration for the various elements of the receiver agent.
 type Config struct {
-	Interval string `mapstructure:"interval"`
-	Path     string `mapstructure:"path"`
+	scraperhelper.ScraperControllerSettings `mapstructure:",squash"`
+	metadata.MetricsBuilderConfig           `mapstructure:",squash"`
+	Targets                                 []*targetConfig `mapstructure:"targets"`
 }
 
-// Validate checks if the receiver configuration is valid
-func (cfg *Config) Validate() error {
-	interval, _ := time.ParseDuration(cfg.Interval)
-	if interval.Minutes() < 1 {
-		return fmt.Errorf("when defined, the interval has to be set to at least 1 minute (1m)")
+type targetConfig struct {
+	confighttp.HTTPClientSettings `mapstructure:",squash"`
+	Method                        string `mapstructure:"method"`
+}
+
+// Validate validates the configuration by checking for missing or invalid fields
+func (cfg *targetConfig) Validate() error {
+	var err error
+
+	if cfg.Endpoint == "" {
+		err = multierr.Append(err, errMissingEndpoint)
+	} else {
+		_, parseErr := url.ParseRequestURI(cfg.Endpoint)
+		if parseErr != nil {
+			err = multierr.Append(err, fmt.Errorf("%s: %w", errInvalidEndpoint.Error(), parseErr))
+		}
 	}
 
-	if _, err := os.Stat(cfg.Path); err != nil {
-		return fmt.Errorf("File does not exist\n")
+	return err
+}
+
+// Validate validates the configuration by checking for missing or invalid fields
+func (cfg *Config) Validate() error {
+	var err error
+
+	if len(cfg.Targets) == 0 {
+		err = multierr.Append(err, errors.New("no targets configured"))
 	}
-	return nil
+
+	for _, target := range cfg.Targets {
+		err = multierr.Append(err, target.Validate())
+	}
+
+	return err
 }
