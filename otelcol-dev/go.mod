@@ -5,7 +5,7 @@ module go.opentelemetry.io/collector/cmd/builder
 go 1.19
 
 require (
-	github.com/null-ref-ex/otel-receivers/httpdatareceiver c8a4557
+	github.com/null-ref-ex/otel-receivers/httpdatareceiver 28c6663
 	go.opentelemetry.io/collector/exporter/loggingexporter v0.81.0
 	go.opentelemetry.io/collector v0.81.0
 )
