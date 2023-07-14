@@ -7,8 +7,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/coreinternal v0.81.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/pdatatest v0.81.0
 	github.com/stretchr/testify v1.8.4
-	github.com/ohler55/ojg/jp v1.19.1
-	github.com/ohler55/ojg/oj v1.19.1
+	github.com/ohler55/ojg v1.19.1
 	go.opentelemetry.io/collector/component v0.81.0
 	go.opentelemetry.io/collector/config/confighttp v0.81.0
 	go.opentelemetry.io/collector/config/configtls v0.81.0
