@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"bytes"
 	"fmt"
+	"strings"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -127,10 +128,14 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 						} else {
 							var dataPoint int64
 							if h.cfg.Targets[targetIndex].Type == "hex" {
-								fmt.Print(fmt.Sprintf("HEX is: %s", ys[0].(string)))
-								value, err := strconv.ParseInt(ys[0].(string), 16, 64)
+								//fmt.Print(fmt.Sprintf("HEX is: %s", ys[0].(string)))								
+								hexString := ys[0].(string)
+								if strings.HasPrefix("0x") {
+									hexString = hexString[2:]
+								}
+								value, err := strconv.ParseInt(hexString, 16, 64)
 								if err != nil {
-									h.settings.Logger.Error(fmt.Sprintf("%s could not be converted as hex -> int", dataPoint), zap.Error(err))
+									h.settings.Logger.Error(fmt.Sprintf("%s could not be converted as hex -> int64", hexString), zap.Error(err))
 								} else {
 									fmt.Print(fmt.Sprintf("dataPoint set to: %s", value))
 									dataPoint = value

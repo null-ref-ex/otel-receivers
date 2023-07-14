@@ -5,11 +5,16 @@ go 1.20
 require go.opentelemetry.io/collector/component v0.81.0
 
 require (
+	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
+	github.com/ethereum/go-ethereum v1.12.0 // indirect
+	github.com/holiman/uint256 v1.2.2-0.20230321075855-87b91420868c // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/ohler55/ojg v1.19.1 // indirect
 	go.opentelemetry.io/collector/consumer v0.81.0 // indirect
+	golang.org/x/crypto v0.10.0 // indirect
 )
 
 require (
