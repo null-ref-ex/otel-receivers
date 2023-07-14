@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 	"strconv"
-	"ioutil"
+	"io/ioutil"
 	"bytes"
 	"fmt"
 
