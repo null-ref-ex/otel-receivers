@@ -1,4 +1,4 @@
-type: httpdatacheck
+type: httpdata
 
 status:
   class: receiver
@@ -27,7 +27,7 @@ attributes:
     type: string
 
 metrics:
-  httpcheck.status:
+  httpdata.status:
     description: 1 if the check resulted in status_code matching the status_class, otherwise 0.
     enabled: true
     sum:
@@ -36,14 +36,21 @@ metrics:
       monotonic: false
     unit: 1
     attributes: [http.url, http.status_code, http.method, http.status_class]
-  httpcheck.duration:
+  httpdata.duration:
     description: Measures the duration of the HTTP check.
     enabled: true
     gauge:
       value_type: int
     unit: ms
     attributes: [http.url]
-  httpcheck.error:
+  httpdata.metric:
+    description: The arbitrary metric taken from response data.
+    enabled: true
+    gauge:
+      value_type: int
+    unit: any
+    attributes: [name]
+  httpdata.error:
     description: Records errors occurring during HTTP check.
     enabled: true
     sum:

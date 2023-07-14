@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"strconv"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -18,14 +19,18 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/null-ref-ex/otel-receivers/httpdatareceiver/internal/metadata"
+
+	"github.com/ohler55/ojg/jp"
+    "github.com/ohler55/ojg/oj"
 )
 
 var (
 	errClientNotInit    = errors.New("client not initialized")
 	httpResponseClasses = map[string]int{"1xx": 1, "2xx": 2, "3xx": 3, "4xx": 4, "5xx": 5}
+	multipleResultsError = errors.New("A JPath expression should yield only one result")
 )
 
-type httpcheckScraper struct {
+type httpdataScraper struct {
 	clients  []*http.Client
 	cfg      *Config
 	settings component.TelemetrySettings
@@ -33,7 +38,7 @@ type httpcheckScraper struct {
 }
 
 // start starts the scraper by creating a new HTTP Client on the scraper
-func (h *httpcheckScraper) start(_ context.Context, host component.Host) (err error) {
+func (h *httpdataScraper) start(_ context.Context, host component.Host) (err error) {
 	for _, target := range h.cfg.Targets {
 		client, clentErr := target.ToClient(host, h.settings)
 		if clentErr != nil {
@@ -45,7 +50,7 @@ func (h *httpcheckScraper) start(_ context.Context, host component.Host) (err er
 }
 
 // scrape connects to the endpoint and produces metrics based on the response
-func (h *httpcheckScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
+func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 	if h.clients == nil || len(h.clients) == 0 {
 		return pmetric.NewMetrics(), errClientNotInit
 	}
@@ -60,7 +65,11 @@ func (h *httpcheckScraper) scrape(ctx context.Context) (pmetric.Metrics, error) 
 
 			now := pcommon.NewTimestampFromTime(time.Now())
 
-			req, err := http.NewRequestWithContext(ctx, h.cfg.Targets[targetIndex].Method, h.cfg.Targets[targetIndex].Endpoint, http.NoBody)
+			body := http.NoBody
+			if h.cfg.Targets[targetIndex].Body != "" {
+				body := bytes.NewBuffer([]byte(h.cfg.Targets[targetIndex].Body))
+			}
+			req, err := http.NewRequestWithContext(ctx, h.cfg.Targets[targetIndex].Method, h.cfg.Targets[targetIndex].Endpoint, body)
 			if err != nil {
 				h.settings.Logger.Error("failed to create request", zap.Error(err))
 				return
@@ -69,22 +78,60 @@ func (h *httpcheckScraper) scrape(ctx context.Context) (pmetric.Metrics, error) 
 			start := time.Now()
 			resp, err := targetClient.Do(req)
 			mux.Lock()
-			h.mb.RecordHttpcheckDurationDataPoint(now, time.Since(start).Milliseconds(), h.cfg.Targets[targetIndex].Endpoint)
+			h.mb.RecordHttpdataDurationDataPoint(now, time.Since(start).Milliseconds(), h.cfg.Targets[targetIndex].Endpoint)
 
 			statusCode := 0
 			if err != nil {
-				h.mb.RecordHttpcheckErrorDataPoint(now, int64(1), h.cfg.Targets[targetIndex].Endpoint, err.Error())
+				h.mb.RecordHttpdataErrorDataPoint(now, int64(1), h.cfg.Targets[targetIndex].Endpoint, err.Error())
 			} else {
 				statusCode = resp.StatusCode
 			}
 
 			for class, intVal := range httpResponseClasses {
 				if statusCode/100 == intVal {
-					h.mb.RecordHttpcheckStatusDataPoint(now, int64(1), h.cfg.Targets[targetIndex].Endpoint, int64(statusCode), req.Method, class)
+					h.mb.RecordHttpdataStatusDataPoint(now, int64(1), h.cfg.Targets[targetIndex].Endpoint, int64(statusCode), req.Method, class)
 				} else {
-					h.mb.RecordHttpcheckStatusDataPoint(now, int64(0), h.cfg.Targets[targetIndex].Endpoint, int64(statusCode), req.Method, class)
+					h.mb.RecordHttpdataStatusDataPoint(now, int64(0), h.cfg.Targets[targetIndex].Endpoint, int64(statusCode), req.Method, class)
 				}
 			}
+
+			// if the user supplied a JPath to 2xx responses
+			if resp.StatusCode >= 200 && resp.StatusCode <= 299 {
+				// read response body
+				body, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					h.settings.Logger.Error("unable to get response body", zap.Error(err))
+				}
+				// close response body
+				response.Body.Close()
+				obj, err := oj.ParseString(string(body))
+				if err != nil {
+					h.settings.Logger.Error("unable to deserialize response body", zap.Error(err))
+				} else {
+					x, err := jp.ParseString(h.cfg.Targets[targetIndex].JPath)
+					if err != nil {
+						h.settings.Logger.Error("unable to parse jpath", zap.Error(err))
+					} else {
+						var ys []any = x.Get(obj)
+						arrayLength := len(ys)
+						if arrayLength > 1 {
+							h.settings.Logger.Error(fmt.Sprintf("jpath yielded %s results", arrayLength), zap.Error(multipleResultsError))
+						} else {
+							dataPoint := ys[0]
+							if h.cfg.Targets[targetIndex].Type == "hex" {
+								value, err := strconv.ParseInt64(dataPoint, 16, 64)
+								if err != nil {
+									h.settings.Logger.Error(fmt.Sprintf("%s could not be converted as hex -> int", dataPoint), zap.Error(err))
+								} else {
+									dataPoint = value
+								}
+								h.mb.RecordHttpdataMetricDataPoint(now, int64(dataPoint), h.cfg.Targets[targetIndex].Metric)
+							}
+						}
+					}					
+				}
+			}
+
 			mux.Unlock()
 		}(client, idx)
 	}
