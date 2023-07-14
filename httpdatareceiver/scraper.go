@@ -130,7 +130,7 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 							if h.cfg.Targets[targetIndex].Type == "hex" {
 								//fmt.Print(fmt.Sprintf("HEX is: %s", ys[0].(string)))								
 								hexString := ys[0].(string)
-								if strings.HasPrefix("0x") {
+								if strings.HasPrefix(hexString, "0x") {
 									hexString = hexString[2:]
 								}
 								value, err := strconv.ParseInt(hexString, 16, 64)
