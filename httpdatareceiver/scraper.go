@@ -70,7 +70,7 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 
 			body := http.NoBody
 			if h.cfg.Targets[targetIndex].Body != "" {
-				body := bytes.NewBuffer([]byte(h.cfg.Targets[targetIndex].Body))
+				body = bytes.NewBuffer([]byte(h.cfg.Targets[targetIndex].Body))
 			}
 			req, err := http.NewRequestWithContext(ctx, h.cfg.Targets[targetIndex].Method, h.cfg.Targets[targetIndex].Endpoint, body)
 			if err != nil {
@@ -106,7 +106,7 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 					h.settings.Logger.Error("unable to get response body", zap.Error(err))
 				}
 				// close response body
-				response.Body.Close()
+				resp.Body.Close()
 				obj, err := oj.ParseString(string(body))
 				if err != nil {
 					h.settings.Logger.Error("unable to deserialize response body", zap.Error(err))
@@ -122,14 +122,14 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 						} else {
 							dataPoint := ys[0]
 							if h.cfg.Targets[targetIndex].Type == "hex" {
-								value, err := strconv.ParseInt64(dataPoint, 16, 64)
+								value, err := strconv.ParseInt(dataPoint, 16, 64)
 								if err != nil {
 									h.settings.Logger.Error(fmt.Sprintf("%s could not be converted as hex -> int", dataPoint), zap.Error(err))
 								} else {
 									dataPoint = value
-								}
-								h.mb.RecordHttpdataMetricDataPoint(now, int64(dataPoint), h.cfg.Targets[targetIndex].Metric)
+								}								
 							}
+							h.mb.RecordHttpdataMetricDataPoint(now, int64(fmt.Sprintf("%s", dataPoint)), h.cfg.Targets[targetIndex].Metric)
 						}
 					}					
 				}
