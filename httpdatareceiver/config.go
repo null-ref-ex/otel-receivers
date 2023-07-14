@@ -19,6 +19,7 @@ import (
 var (
 	errMissingEndpoint = errors.New(`"endpoint" must be specified`)
 	errInvalidEndpoint = errors.New(`"endpoint" must be in the form of <scheme>://<hostname>[:<port>]`)
+	errMissingRequestBody = errors.New(`If using POST|PATCH HTTP verbs you must supply a "body" option`)
 )
 
 // Config defines the configuration for the various elements of the receiver agent.
@@ -31,6 +32,8 @@ type Config struct {
 type targetConfig struct {
 	confighttp.HTTPClientSettings `mapstructure:",squash"`
 	Method                        string `mapstructure:"method"`
+	Body						  string `mapstructure:"body"`
+	JPath						  string `mapstructure:"jpath"`
 }
 
 // Validate validates the configuration by checking for missing or invalid fields
@@ -45,6 +48,12 @@ func (cfg *targetConfig) Validate() error {
 			err = multierr.Append(err, fmt.Errorf("%s: %w", errInvalidEndpoint.Error(), parseErr))
 		}
 	}
+
+	if cfg.Method == "POST" || cfg.Method == "PATCH" {
+		if cfg.Body == "" {
+			err = multierr.Append(err, errMissingRequestBody)
+		}
+	} 
 
 	return err
 }

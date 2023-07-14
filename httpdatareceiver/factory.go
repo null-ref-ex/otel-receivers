@@ -16,7 +16,7 @@ import (
 	"github.com/null-ref-ex/otel-receivers/httpdatareceiver/internal/metadata"
 )
 
-var errConfigNotHTTPCheck = errors.New("config was not a HTTP check receiver config")
+var errConfigNotHTTPCheck = errors.New("config was not a HTTP data receiver config")
 
 // NewFactory creates a new receiver factory
 func NewFactory() receiver.Factory {
