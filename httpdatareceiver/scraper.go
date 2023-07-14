@@ -68,15 +68,18 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 
 			now := pcommon.NewTimestampFromTime(time.Now())
 
-			body := http.NoBody
+			var req *http.Request
+			var requestErr error
 			if h.cfg.Targets[targetIndex].Body != "" {
-				body = bytes.NewBuffer([]byte(h.cfg.Targets[targetIndex].Body))
+				body := bytes.NewBuffer([]byte(h.cfg.Targets[targetIndex].Body))
+				req, requestErr = http.NewRequestWithContext(ctx, h.cfg.Targets[targetIndex].Method, h.cfg.Targets[targetIndex].Endpoint, body)				
+			} else {
+				req, requestErr = http.NewRequestWithContext(ctx, h.cfg.Targets[targetIndex].Method, h.cfg.Targets[targetIndex].Endpoint, http.NoBody)
 			}
-			req, err := http.NewRequestWithContext(ctx, h.cfg.Targets[targetIndex].Method, h.cfg.Targets[targetIndex].Endpoint, body)
-			if err != nil {
+			if requestErr != nil {
 				h.settings.Logger.Error("failed to create request", zap.Error(err))
 				return
-			}
+			}	
 
 			start := time.Now()
 			resp, err := targetClient.Do(req)
@@ -120,16 +123,18 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 						if arrayLength > 1 {
 							h.settings.Logger.Error(fmt.Sprintf("jpath yielded %s results", arrayLength), zap.Error(multipleResultsError))
 						} else {
-							dataPoint := ys[0]
+							var dataPoint int64
 							if h.cfg.Targets[targetIndex].Type == "hex" {
-								value, err := strconv.ParseInt(dataPoint, 16, 64)
+								value, err := strconv.ParseInt(ys[0].(string), 16, 64)
 								if err != nil {
 									h.settings.Logger.Error(fmt.Sprintf("%s could not be converted as hex -> int", dataPoint), zap.Error(err))
 								} else {
 									dataPoint = value
 								}								
+							} else {
+								dataPoint = ys[0].(int64)
 							}
-							h.mb.RecordHttpdataMetricDataPoint(now, int64(fmt.Sprintf("%s", dataPoint)), h.cfg.Targets[targetIndex].Metric)
+							h.mb.RecordHttpdataMetricDataPoint(now, dataPoint, h.cfg.Targets[targetIndex].Metric)
 						}
 					}					
 				}
