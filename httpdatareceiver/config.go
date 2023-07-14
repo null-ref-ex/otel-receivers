@@ -15,7 +15,6 @@ import (
 	"github.com/null-ref-ex/otel-receivers/httpdatareceiver/internal/metadata"
 
 	"github.com/ohler55/ojg/jp"
-    "github.com/ohler55/ojg/oj"
 )
 
 // Predefined error responses for configuration validation failures
