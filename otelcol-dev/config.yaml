@@ -1,0 +1,26 @@
+receivers:
+  httpdata:
+    targets:
+      - endpoint: https://eth.goerli.rpc-runtime.com
+        method: POST
+        body: '{"method":"eth_blockNumber","params":[],"id":1,"jsonrpc":"2.0"}'
+        jpath: $.result
+        type: hex
+        metric: current_block
+    collection_interval: 10s
+
+processors:
+
+exporters:
+  logging:
+    verbosity: detailed
+
+service:
+  pipelines:
+    metrics:
+      receivers: [httpdata]
+      processors: []
+      exporters: [logging]
+  telemetry:
+    logs:
+      level: debug

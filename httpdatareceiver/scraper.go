@@ -79,7 +79,8 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 			if requestErr != nil {
 				h.settings.Logger.Error("failed to create request", zap.Error(requestErr))
 				return
-			}	
+			}
+			req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 			start := time.Now()
 			resp, err := targetClient.Do(req)
@@ -110,6 +111,7 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 				}
 				// close response body
 				resp.Body.Close()
+				h.settings.Logger.Info(string(body))
 				obj, err := oj.ParseString(string(body))
 				if err != nil {
 					h.settings.Logger.Error("unable to deserialize response body", zap.Error(err))
