@@ -77,7 +77,7 @@ func (h *httpdataScraper) scrape(ctx context.Context) (pmetric.Metrics, error) {
 				req, requestErr = http.NewRequestWithContext(ctx, h.cfg.Targets[targetIndex].Method, h.cfg.Targets[targetIndex].Endpoint, http.NoBody)
 			}
 			if requestErr != nil {
-				h.settings.Logger.Error("failed to create request", zap.Error(err))
+				h.settings.Logger.Error("failed to create request", zap.Error(requestErr))
 				return
 			}	
 
