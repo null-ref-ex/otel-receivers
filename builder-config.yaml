@@ -9,4 +9,4 @@ exporters:
 
 receivers:
   - gomod:
-      github.com/null-ref-ex/otel-receivers/httpdatareceiver 400e093
+      github.com/null-ref-ex/otel-receivers/httpdatareceiver 67d7c77

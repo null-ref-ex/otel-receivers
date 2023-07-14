@@ -25,6 +25,9 @@ attributes:
   error.message:
     description: Error message recorded during check
     type: string
+  metric.name:
+    description: The metric name
+    type: string
 
 metrics:
   httpdata.status:
@@ -49,7 +52,7 @@ metrics:
     gauge:
       value_type: int
     unit: any
-    attributes: [name]
+    attributes: [metric.name]
   httpdata.error:
     description: Records errors occurring during HTTP check.
     enabled: true

@@ -23,28 +23,32 @@ func (ms *MetricConfig) Unmarshal(parser *confmap.Conf) error {
 	return nil
 }
 
-// MetricsConfig provides config for httpcheck metrics.
+// MetricsConfig provides config for httpdata metrics.
 type MetricsConfig struct {
-	HttpcheckDuration MetricConfig `mapstructure:"httpcheck.duration"`
-	HttpcheckError    MetricConfig `mapstructure:"httpcheck.error"`
-	HttpcheckStatus   MetricConfig `mapstructure:"httpcheck.status"`
+	HttpdataDuration MetricConfig `mapstructure:"httpdata.duration"`
+	HttpdataError    MetricConfig `mapstructure:"httpdata.error"`
+	HttpdataMetric   MetricConfig `mapstructure:"httpdata.metric"`
+	HttpdataStatus   MetricConfig `mapstructure:"httpdata.status"`
 }
 
 func DefaultMetricsConfig() MetricsConfig {
 	return MetricsConfig{
-		HttpcheckDuration: MetricConfig{
+		HttpdataDuration: MetricConfig{
 			Enabled: true,
 		},
-		HttpcheckError: MetricConfig{
+		HttpdataError: MetricConfig{
 			Enabled: true,
 		},
-		HttpcheckStatus: MetricConfig{
+		HttpdataMetric: MetricConfig{
+			Enabled: true,
+		},
+		HttpdataStatus: MetricConfig{
 			Enabled: true,
 		},
 	}
 }
 
-// MetricsBuilderConfig is a configuration for httpcheck metrics builder.
+// MetricsBuilderConfig is a configuration for httpdata metrics builder.
 type MetricsBuilderConfig struct {
 	Metrics MetricsConfig `mapstructure:"metrics"`
 }

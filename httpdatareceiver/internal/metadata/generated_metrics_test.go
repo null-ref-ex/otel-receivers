@@ -56,15 +56,19 @@ func TestMetricsBuilder(t *testing.T) {
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordHttpcheckDurationDataPoint(ts, 1, "attr-val")
+			mb.RecordHttpdataDurationDataPoint(ts, 1, "attr-val")
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordHttpcheckErrorDataPoint(ts, 1, "attr-val", "attr-val")
+			mb.RecordHttpdataErrorDataPoint(ts, 1, "attr-val", "attr-val")
 
 			defaultMetricsCount++
 			allMetricsCount++
-			mb.RecordHttpcheckStatusDataPoint(ts, 1, "attr-val", 1, "attr-val", "attr-val")
+			mb.RecordHttpdataMetricDataPoint(ts, 1, "attr-val")
+
+			defaultMetricsCount++
+			allMetricsCount++
+			mb.RecordHttpdataStatusDataPoint(ts, 1, "attr-val", 1, "attr-val", "attr-val")
 
 			metrics := mb.Emit()
 
@@ -91,9 +95,9 @@ func TestMetricsBuilder(t *testing.T) {
 			validatedMetrics := make(map[string]bool)
 			for i := 0; i < ms.Len(); i++ {
 				switch ms.At(i).Name() {
-				case "httpcheck.duration":
-					assert.False(t, validatedMetrics["httpcheck.duration"], "Found a duplicate in the metrics slice: httpcheck.duration")
-					validatedMetrics["httpcheck.duration"] = true
+				case "httpdata.duration":
+					assert.False(t, validatedMetrics["httpdata.duration"], "Found a duplicate in the metrics slice: httpdata.duration")
+					validatedMetrics["httpdata.duration"] = true
 					assert.Equal(t, pmetric.MetricTypeGauge, ms.At(i).Type())
 					assert.Equal(t, 1, ms.At(i).Gauge().DataPoints().Len())
 					assert.Equal(t, "Measures the duration of the HTTP check.", ms.At(i).Description())
@@ -106,9 +110,9 @@ func TestMetricsBuilder(t *testing.T) {
 					attrVal, ok := dp.Attributes().Get("http.url")
 					assert.True(t, ok)
 					assert.EqualValues(t, "attr-val", attrVal.Str())
-				case "httpcheck.error":
-					assert.False(t, validatedMetrics["httpcheck.error"], "Found a duplicate in the metrics slice: httpcheck.error")
-					validatedMetrics["httpcheck.error"] = true
+				case "httpdata.error":
+					assert.False(t, validatedMetrics["httpdata.error"], "Found a duplicate in the metrics slice: httpdata.error")
+					validatedMetrics["httpdata.error"] = true
 					assert.Equal(t, pmetric.MetricTypeSum, ms.At(i).Type())
 					assert.Equal(t, 1, ms.At(i).Sum().DataPoints().Len())
 					assert.Equal(t, "Records errors occurring during HTTP check.", ms.At(i).Description())
@@ -126,9 +130,24 @@ func TestMetricsBuilder(t *testing.T) {
 					attrVal, ok = dp.Attributes().Get("error.message")
 					assert.True(t, ok)
 					assert.EqualValues(t, "attr-val", attrVal.Str())
-				case "httpcheck.status":
-					assert.False(t, validatedMetrics["httpcheck.status"], "Found a duplicate in the metrics slice: httpcheck.status")
-					validatedMetrics["httpcheck.status"] = true
+				case "httpdata.metric":
+					assert.False(t, validatedMetrics["httpdata.metric"], "Found a duplicate in the metrics slice: httpdata.metric")
+					validatedMetrics["httpdata.metric"] = true
+					assert.Equal(t, pmetric.MetricTypeGauge, ms.At(i).Type())
+					assert.Equal(t, 1, ms.At(i).Gauge().DataPoints().Len())
+					assert.Equal(t, "The arbitrary metric taken from response data.", ms.At(i).Description())
+					assert.Equal(t, "any", ms.At(i).Unit())
+					dp := ms.At(i).Gauge().DataPoints().At(0)
+					assert.Equal(t, start, dp.StartTimestamp())
+					assert.Equal(t, ts, dp.Timestamp())
+					assert.Equal(t, pmetric.NumberDataPointValueTypeInt, dp.ValueType())
+					assert.Equal(t, int64(1), dp.IntValue())
+					attrVal, ok := dp.Attributes().Get("metric.name")
+					assert.True(t, ok)
+					assert.EqualValues(t, "attr-val", attrVal.Str())
+				case "httpdata.status":
+					assert.False(t, validatedMetrics["httpdata.status"], "Found a duplicate in the metrics slice: httpdata.status")
+					validatedMetrics["httpdata.status"] = true
 					assert.Equal(t, pmetric.MetricTypeSum, ms.At(i).Type())
 					assert.Equal(t, 1, ms.At(i).Sum().DataPoints().Len())
 					assert.Equal(t, "1 if the check resulted in status_code matching the status_class, otherwise 0.", ms.At(i).Description())
